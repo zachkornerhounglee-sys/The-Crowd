@@ -329,6 +329,8 @@ document.addEventListener('pointerlockchange',()=>{pointerLocked=document.pointe
 window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='Escape'){if(GAME.paused){GAME.paused=false;showLayer('hud');}else if(GAME.started)togglePause();return;}if(!GAME.started||GAME.paused||GAME.over)return;GAME.keys.add(e.code);if(e.repeat)return;const me=localActor();if((e.code==='KeyE'||e.code==='KeyQ'||e.code==='Space')&&me)actionFor(me);});window.addEventListener('keyup',e=>GAME.keys.delete(e.code));window.addEventListener('blur',()=>GAME.keys.clear());window.addEventListener('resize',()=>{if(!renderer||!camera)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.45));renderer.setSize(innerWidth,innerHeight);});
 $('touchAbility').addEventListener('click',()=>{const me=localActor();if(me)actionFor(me);});document.querySelectorAll('[data-move]').forEach(btn=>{const code=({'ArrowUp':'KeyW','ArrowDown':'KeyS','ArrowLeft':'KeyA','ArrowRight':'KeyD'})[btn.dataset.move]||btn.dataset.move;btn.addEventListener('pointerdown',e=>{e.preventDefault();GAME.touchKeys.add(code);btn.setPointerCapture(e.pointerId);});const end=()=>GAME.touchKeys.delete(code);btn.addEventListener('pointerup',end);btn.addEventListener('pointercancel',end);btn.addEventListener('lostpointercapture',end);});
 // PeerJS room networking. GitHub Pages serves the game; PeerJS handles room signalling.
+function setStatus(id,msg,kind=''){const el=$(id);if(!el)return;el.textContent=msg;el.className='online-status'+(kind?' '+kind:'');}
+function sendNet(msg){try{if(NET.conn&&NET.conn.open)NET.conn.send(msg);}catch(e){console.warn('Network send failed',e);}}
 const PEER_OPTIONS={
  host:'0.peerjs.com',port:443,path:'/',secure:true,debug:1,
  config:{sdpSemantics:'unified-plan',iceServers:[
@@ -348,7 +350,7 @@ function friendlyPeerError(e,stage){
  if(stage==='peer')return 'Could not start online networking'+(msg?': '+msg:'')+'. Check that the network allows peerjs.com.';
  return 'Connection problem'+(msg?': '+msg:(type?' ('+type+')':''))+'. Try creating a fresh room.';
 }
-function makePeer(){return new Peer(PEER_OPTIONS);}
+function makePeer(){return new Peer(undefined, PEER_OPTIONS);}
 function unlockOnlineButtons(){if($('joinBtn'))$('joinBtn').disabled=false;if($('hostBtn'))$('hostBtn').disabled=false;}
 function hostRoom(){
  if(!window.Peer){setStatus('hostStatus','PeerJS did not load from either CDN. Check whether your network blocks jsDelivr and unpkg.','bad');return;}
